@@ -1,0 +1,280 @@
+<!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panel Demo - Bug WA (Mockup) </title>
+  <style>
+    /* --- Reset & base --- */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    :root{
+      --bg:#f4fbf7; --card:#ffffff; --accent:#1fa34a; --muted:#5a7a66; --mono:#c8f7d0; --glass: rgba(31,163,74,0.08)
+    }
+    body{background:linear-gradient(180deg,var(--bg),#eaf8ee);color:#0e2d1a;padding:28px;font-size:16px}/* --- Container --- */
+.container{max-width:980px;margin:20px auto;border-radius:14px;overflow:hidden;box-shadow:0 18px 50px rgba(10,30,15,0.08)}
+header{display:flex;align-items:center;gap:14px;padding:20px;background:linear-gradient(90deg,var(--accent),#15863a);color:white}
+.logo{width:56px;height:56px;border-radius:12px;background:rgba(255,255,255,0.09);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
+h1{font-size:20px;letter-spacing:0.2px}
+.subtitle{font-size:13px;opacity:0.95}
+
+/* --- Grid --- */
+.main{display:grid;grid-template-columns:1fr 420px;gap:20px;background:var(--card);padding:22px}
+
+/* --- Left panel (menu) --- */
+.left{display:flex;flex-direction:column;gap:14px}
+.target-wrap{display:flex;flex-direction:column;gap:6px}
+label{font-weight:700;color:var(--muted);font-size:14px}
+input[type=text]{padding:12px;border-radius:10px;border:1px solid rgba(14,45,26,0.06);font-size:16px}
+
+.menu{background:linear-gradient(180deg, rgba(31,163,74,0.03), rgba(31,163,74,0.01));padding:14px;border-radius:12px;border:1px solid var(--glass)}
+.option{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:10px;background:transparent;border:1px solid rgba(14,45,26,0.04);cursor:pointer;transition:all .16s}
+.option:hover{transform:translateY(-6px);box-shadow:0 10px 26px rgba(14,45,26,0.04)}
+.opt-info{display:flex;flex-direction:column}
+.opt-name{font-size:18px;font-weight:800;color:#07220f}
+.opt-desc{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* Buttons moved bottom */
+.opt-actions{display:flex;gap:8px}
+.btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800;font-size:14px}
+.btn-green{background:var(--accent);color:white}
+.btn-ghost{background:transparent;border:1px solid rgba(14,45,26,0.06);color:#0f3b22}
+
+/* --- Right panel (log) --- */
+.right{display:flex;flex-direction:column;gap:12px}
+.controls{display:flex;gap:8px;align-items:center}
+.vip{display:flex;gap:8px;align-items:center}
+.log{background:#042712;padding:14px;border-radius:12px;height:380px;color:var(--mono);overflow:auto;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;font-size:15px}
+
+/* hacker text styling */
+.hacker{color:#9ff1a7;font-weight:700}
+.muted{color:#94cfa2;opacity:0.85}
+
+/* loading bar */
+.loading{display:inline-flex;align-items:center;gap:10px}
+.loader-bar{width:160px;height:10px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden}
+.loader-fill{height:100%;width:0%;background:linear-gradient(90deg,#bff5c8,var(--accent));transition:width 300ms linear}
+
+/* enlarged typography for main areas */
+.opt-name{font-size:20px}
+.opt-desc{font-size:14px}
+.footer{padding:14px 20px;background:rgba(14,45,26,0.02);display:flex;justify-content:space-between;align-items:center}
+
+@media (max-width:900px){.main{grid-template-columns:1fr}.log{height:260px}}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">MINZX</div>
+      <div>
+        <h1>Panel — Bug WA (No sender)</h1>
+        <div class="subtitle">Free Version — <strong>JANGAN DIJUAL</strong>. Dilengkapi CREDIT!.</div>
+      </div>
+    </header><section class="main">
+  <div class="left">
+    <div class="target-wrap">
+      <label for="target">Target:</label>
+      <input id="target" type="text" placeholder="62xxxxxxxxxx No Target" />
+    </div>
+
+    <div class="menu" role="menu">
+      <div class="option" data-action="xcrash" tabindex="0">
+        <div class="opt-info">
+          <div class="opt-name">X-CRASH</div>
+          <div class="opt-desc">pengiriman paket besar jangka pendek</div>
+        </div>
+        <div class="opt-actions">
+          <button class="btn btn-green small-trigger" data-action="xcrash">Jalankan</button>
+        </div>
+      </div>
+
+      <div class="option" data-action="xdelay" tabindex="0">
+        <div class="opt-info">
+          <div class="opt-name">X-DELAY</div>
+          <div class="opt-desc">delay berkala & retry (2 Jam)</div>
+        </div>
+        <div class="opt-actions">
+          <button class="btn btn-green small-trigger" data-action="xdelay">Jalankan</button>
+        </div>
+      </div>
+
+      <div class="option" data-action="xbug" tabindex="0">
+        <div class="opt-info">
+          <div class="opt-name">X-BUG</div>
+          <div class="opt-desc">bug, stacktrace & logging</div>
+        </div>
+        <div class="opt-actions">
+          <button class="btn btn-green small-trigger" data-action="xbug">Jalankan</button>
+        </div>
+      </div>
+
+      <div class="option" data-action="kenon" tabindex="0">
+        <div class="opt-info">
+          <div class="opt-name">KENON SPAM <span style="font-size:12px;color:var(--muted);margin-left:8px">(VIP only)</span></div>
+          <div class="opt-desc">Fitur eksklusif — akses VIP</div>
+        </div>
+        <div class="opt-actions">
+          <button class="btn btn-ghost small-trigger" data-action="kenon" id="btn-kenon" disabled>VIP Locked</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn btn-ghost" id="clear-log">Clear Log</button>
+        <button class="btn btn-green" id="simuate-all">OUTPUT LOG</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="right">
+    <div class="controls">
+      <div class="vip">
+        <input id="vip-code" type="text" placeholder="Masukkan kode VIP" style="padding:10px;border-radius:8px;border:1px solid rgba(14,45,26,0.06)" />
+        <button class="btn btn-green" id="check-vip">Unlock VIP</button>
+      </div>
+    </div>
+
+    <div class="log" id="log" aria-live="polite">
+      <div class="muted">[INFO]: aktivitas tidak mengirim data keluar.</div>
+    </div>
+
+  </aside>
+</section>
+
+<div class="footer">
+  <div class="muted">Catatan: Jangan digunakan untuk merugikan orang lain. Kami tidak bertanggung Jawab atas apa yang terjadi.</div>
+  <div style="font-weight:800;color:var(--accent)">Create By Minzx.</div>
+</div>
+
+  </div>  <script>
+    // Harmless — no network actions are performed.
+    const logEl = document.getElementById('log');
+    function appendLine(html, cls){
+      const d = document.createElement('div');
+      if(cls) d.className = cls;
+      d.innerHTML = html;
+      logEl.appendChild(d);
+      logEl.scrollTop = logEl.scrollHeight;
+      return d;
+    }
+
+    function clearLog(){ logEl.innerHTML = '<div class="muted">[INFO]: aktivitas tidak mengirim data keluar.</div>'; }
+
+    // hacker-style random lines generator
+    function hackerLine(){
+      const samples = [
+        "root@minz:~$ send --target",
+        "[ok] packet 0x1f7a sent",
+        "[warn] retrying chunk 4/8",
+        "auth: token validated ",
+        "payload: 0x9b7c... encrypted",
+        "socket: write 2048b -> queued",
+        "log: stacktrace[0] at monitor.c:112",
+        "spawn: worker-7 started",
+        "dbg: checksum match OK",
+        "net: handshake complete"
+      ];
+      return samples[Math.floor(Math.random()*samples.length)];
+    }
+
+    // visual progress simulator
+    function simulateProgress(duration=6400, onUpdate){
+      return new Promise(res =>{
+        const start = Date.now();
+        const total = duration;
+        const iv = setInterval(()=>{
+          const passed = Date.now()-start;
+          let pct = Math.min(100, Math.round((passed/total)*100));
+          if(onUpdate) onUpdate(pct);
+          if(pct>=100){ clearInterval(iv); res(); }
+        }, 120);
+      });
+    }
+
+    // action implementations
+    const actions = {
+      xcrash: async () => {
+        const t = new Date().toLocaleTimeString();
+        appendLine(`<span class="hacker">[${t}] X-CRASH: preparing payload...</span>`);
+
+        // loading block in log
+        const block = appendLine(`<div class="loading">[${t}] <strong>Mengirim</strong> <div class="loader-bar" aria-hidden="true"><div class="loader-fill"></div></div></div>`);
+        const fill = block.querySelector('.loader-fill');
+
+        // during progress, occasionally append hacker lines
+        const writer = setInterval(()=>{ appendLine('<span class="hacker">» '+hackerLine()+'</span>'); }, 420);
+
+        await simulateProgress(2600, pct=>{ fill.style.width = pct+'%'; });
+        clearInterval(writer);
+        appendLine('<span class="hacker">[DONE] X-CRASH:selesai — tidak ada trafik keluar.</span>');
+      },
+
+      xdelay: async () => {
+        const t = new Date().toLocaleTimeString();
+        appendLine(`<span class="hacker">[${t}] X-DELAY: sequencing tasks...</span>`);
+        const block = appendLine(`<div class="loading">[${t}] <strong>Mengirim</strong> <div class="loader-bar" aria-hidden="true"><div class="loader-fill"></div></div></div>`);
+        const fill = block.querySelector('.loader-fill');
+        const writer = setInterval(()=>{ appendLine('<span class="hacker">» '+hackerLine()+'</span>'); }, 520);
+        await simulateProgress(2000, pct=>{ fill.style.width = pct+'%'; });
+        clearInterval(writer);
+        appendLine('<span class="hacker">[DONE] X-DELAY: semua retry selesai.</span>');
+      },
+
+      xbug: async () => {
+        const t = new Date().toLocaleTimeString();
+        appendLine(`<span class="hacker">[${t}] X-BUG: running diagnostics...</span>`);
+        const block = appendLine(`<div class="loading">[${t}] <strong>Mengirim</strong> <div class="loader-bar" aria-hidden="true"><div class="loader-fill"></div></div></div>`);
+        const fill = block.querySelector('.loader-fill');
+        const writer = setInterval(()=>{ appendLine('<span class="hacker">» '+hackerLine()+'</span>'); }, 360);
+        await simulateProgress(2200, pct=>{ fill.style.width = pct+'%'; });
+        clearInterval(writer);
+        appendLine('<span class="hacker">[DONE] X-BUG: captured stacktrace entries.</span>');
+      },
+
+      kenon: async () => {
+        const t = new Date().toLocaleTimeString();
+        appendLine(`<span class="hacker">[${t}] KENON: VIP sequence start...</span>`);
+        const block = appendLine(`<div class="loading">[${t}] <strong>Mengirim (VIP)</strong> <div class="loader-bar" aria-hidden="true"><div class="loader-fill"></div></div></div>`);
+        const fill = block.querySelector('.loader-fill');
+        const writer = setInterval(()=>{ appendLine('<span class="hacker">» [VIP] '+hackerLine()+'</span>'); }, 300);
+        await simulateProgress(7000, pct=>{ fill.style.width = pct+'%'; });
+        clearInterval(writer);
+        appendLine('<span class="hacker">[DONE] KENON: VIP complete. No external action.</span>');
+      }
+    };
+
+    // wiring
+    document.querySelectorAll('.small-trigger').forEach(btn=>{
+      btn.addEventListener('click', async e=>{ e.stopPropagation(); const action = btn.dataset.action; await trigger(action); });
+    });
+
+    document.querySelectorAll('.option').forEach(opt=>{
+      opt.addEventListener('click', async ()=>{ const action = opt.dataset.action; await trigger(action); });
+      opt.addEventListener('keydown', async e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); const action=opt.dataset.action; await trigger(action); } });
+    });
+
+    async function trigger(action){
+      if(action==='kenon'){
+        const btnKenon = document.getElementById('btn-kenon');
+        if(btnKenon.disabled){ appendLine('<span class="muted">[!] Akses KENON ditolak: fitur VIP belum di-unlock.</span>'); return; }
+      }
+      const target = document.getElementById('target').value.trim();
+      if(target) appendLine(`<span class="muted">Target: ${target}</span>`);
+      if(actions[action]) await actions[action]();
+    }
+
+    // helper buttons
+    document.getElementById('clear-log').addEventListener('click', clearLog);
+    document.getElementById('simulate-all').addEventListener('click', async ()=>{
+      appendLine('<span class="muted">Menjalankan semua bug menjadi 1</span>');
+      await trigger('xcrash'); await trigger('xdelay'); await trigger('xbug');
+    });
+
+    document.getElementById('check-vip').addEventListener('click', ()=>{
+      const code = document.getElementById('vip-code').value.trim();
+      const btnKenon = document.getElementById('btn-kenon');
+      if(code==='bokep'){ btnKenon.disabled=false; btnKenon.classList.remove('btn-ghost'); btnKenon.classList.add('btn-green'); btnKenon.textContent='Jalankan'; appendLine('<span class="hacker">VIP unlocked</span>'); }
+      else appendLine('<span class="muted">Kode VIP salah</span>');
+    });
+
+  </script></body>
+</html>
