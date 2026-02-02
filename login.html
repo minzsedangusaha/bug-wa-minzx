@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Seller - Minzxit Order System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .logo { font-size: 48px; margin-bottom: 15px; }
+        .login-body { padding: 40px; }
+        .form-group { margin-bottom: 25px; }
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .url-preview {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo"><i class="fas fa-store-alt"></i></div>
+            <h1>Minzxit Order System</h1>
+            <p>Professional Seller Platform</p>
+        </div>
+        
+        <div class="login-body">
+            <div id="alertMessage" class="alert"></div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="you@company.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password (Minimal 6 karakter)</label>
+                <input type="password" id="password" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-link"></i> URL Toko Anda</label>
+                <div class="input-group">
+                    <span class="input-group-text">minzxit.com/</span>
+                    <input type="text" id="sellerId" class="form-control" 
+                           placeholder="nama-toko-anda" 
+                           pattern="[a-z0-9-]+"
+                           title="Hanya huruf kecil, angka, dan strip (-)">
+                </div>
+                <small class="text-muted">
+                    Contoh: minzxit.com/<strong>nama-toko-anda</strong><br>
+                    URL ini akan menjadi alamat toko online Anda
+                </small>
+            </div>
+            
+            <div class="url-preview">
+                <i class="fas fa-globe"></i>
+                <strong>URL Toko Anda:</strong>
+                <div id="urlDisplay" class="mt-2" style="font-family: monospace; color: #667eea;">
+                    https://minzxit.com/<span id="urlPreview">nama-toko-anda</span>
+                </div>
+            </div>
+            
+            <button id="loginBtn" class="btn-login" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> Masuk / Daftar Seller
+            </button>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Akun akan dibuat otomatis jika belum terdaftar
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+        import { 
+            getDatabase, 
+            ref, 
+            set, 
+            get, 
+            query, 
+            orderByChild, 
+            equalTo 
+        } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCOndXM5jrVrmG8_9VYLNOfWRW_NRwe2aQ",
+            authDomain: "order-c1983.firebaseapp.com",
+            databaseURL: "https://order-c1983-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "order-c1983",
+            storageBucket: "order-c1983.firebasestorage.app",
+            messagingSenderId: "1011114815070",
+            appId: "1:1011114815070:web:4442de5177128fe9ee0ecf"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // Update URL preview
+        document.getElementById('sellerId').addEventListener('input', function(e) {
+            const sellerId = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            document.getElementById('urlPreview').textContent = sellerId || 'nama-toko-anda';
+        });
+
+        // Auto redirect if already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = '/dashboard';
+            }
+        });
+
+        window.login = async function() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const sellerIdInput = document.getElementById('sellerId').value.trim().toLowerCase();
+            
+            // Validasi
+            if (!email || !password) {
+                alert('Harap isi email dan password');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password minimal 6 karakter');
+                return;
+            }
+            
+            if (!sellerIdInput) {
+                alert('Harap tentukan URL untuk toko Anda');
+                return;
+            }
+            
+            // Validasi format seller ID
+            if (!/^[a-z0-9-]+$/.test(sellerIdInput)) {
+                alert('URL hanya boleh berisi huruf kecil, angka, dan strip (-)');
+                return;
+            }
+            
+            if (sellerIdInput.length < 3) {
+                alert('URL toko minimal 3 karakter');
+                return;
+            }
+            
+            // Cek apakah seller ID sudah digunakan
+            const sellersRef = ref(db, 'sellers');
+            const queryRef = query(sellersRef, orderByChild('sellerId'), equalTo(sellerIdInput));
+            const snapshot = await get(queryRef);
+            
+            if (snapshot.exists()) {
+                alert('URL toko sudah digunakan. Silakan pilih URL lain.');
+                return;
+            }
+            
+            try {
+                // Coba login
+                await signInWithEmailAndPassword(auth, email, password);
+                await updateSellerData(email, sellerIdInput);
+                
+                window.location.href = '/dashboard';
+                
+            } catch (error) {
+                // Jika user tidak ditemukan, buat akun baru
+                if (error.code === 'auth/user-not-found') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        await createSellerData(email, sellerIdInput);
+                        
+                        alert('Akun berhasil dibuat! Mengarahkan ke dashboard...');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 1000);
+                        
+                    } catch (createError) {
+                        alert('Gagal membuat akun: ' + createError.message);
+                    }
+                } else {
+                    alert('Login gagal: ' + error.message);
+                }
+            }
+        };
+
+        async function createSellerData(email, sellerId) {
+            const user = auth.currentUser;
+            const timestamp = new Date().toISOString();
+            
+            // Data seller
+            const sellerData = {
+                uid: user.uid,
+                email: email,
+                sellerId: sellerId,
+                shopName: email.split('@')[0],
+                shopDescription: 'Toko online profesional',
+                createdAt: timestamp,
+                lastLogin: timestamp,
+                status: 'active',
+                settings: {
+                    autoReply: true,
+                    autoReplyMessage: 'Terima kasih sudah order! Pesanan Anda sedang kami proses.',
+                    telegramBotToken: '',
+                    telegramChatId: '',
+                    notifications: true
+                },
+                stats: {
+                    totalOrders: 0,
+                    completedOrders: 0,
+                    pendingOrders: 0
+                }
+            };
+            
+            // Simpan di multiple paths untuk kemudahan query
+            await Promise.all([
+                set(ref(db, 'sellers/' + user.uid), sellerData),
+                set(ref(db, 'sellerIds/' + sellerId), {
+                    uid: user.uid,
+                    email: email,
+                    createdAt: timestamp
+                }),
+                set(ref(db, 'admins/' + user.uid), {
+                    email: email,
+                    sellerId: sellerId,
+                    role: 'admin',
+                    createdAt: timestamp
+                })
+            ]);
+            
+            return sellerData;
+        }
+
+        async function updateSellerData(email, sellerId) {
+            const user = auth.currentUser;
+            const userRef = ref(db, 'sellers/' + user.uid);
+            const snapshot = await get(userRef);
+            
+            if (!snapshot.exists()) {
+                // Jika data seller belum ada, buat baru
+                await createSellerData(email, sellerId);
+            } else {
+                // Update last login
+                await set(ref(db, 'sellers/' + user.uid + '/lastLogin'), new Date().toISOString());
+            }
+        }
+    </script>
+</body>
+</html>
