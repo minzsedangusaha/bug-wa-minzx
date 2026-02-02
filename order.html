@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order - Minzxit Order System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #667eea; --secondary: #764ba2; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 40px 0; }
+        .shop-card { background: white; border-radius: 15px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .form-control { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; }
+        .btn-submit { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 16px; cursor: pointer; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="shopName">Loading...</h1>
+            <p id="shopDescription" class="text-muted"></p>
+        </div>
+        
+        <div class="shop-card">
+            <div id="shopInfo"></div>
+            
+            <form id="orderForm">
+                <input type="text" id="customerName" class="form-control" placeholder="Nama Lengkap" required>
+                <input type="tel" id="customerPhone" class="form-control" placeholder="Nomor WhatsApp (0812...)" required>
+                <textarea id="orderMessage" class="form-control" rows="5" placeholder="Detail pesanan Anda..." required></textarea>
+                
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 10px;">
+                        <input type="file" id="fileUpload" accept="image/*,.pdf,.doc,.docx" style="display: none;">
+                        <div style="border: 2px dashed #667eea; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: #667eea; margin-bottom: 10px;"></i>
+                            <div>Upload bukti transfer atau file pendukung (opsional)</div>
+                            <small style="color: #666;">Max. 5MB - JPG, PNG, PDF, DOC</small>
+                        </div>
+                    </label>
+                    <div id="filePreview"></div>
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Kirim Pesanan
+                </button>
+            </form>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px; color: #666; font-size: 14px;">
+            <p>Powered by <strong>Minzxit Order System</strong> - Professional E-commerce Solution</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getDatabase, ref, set, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-storage.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCOndXM5jrVrmG8_9VYLNOfWRW_NRwe2aQ",
+            authDomain: "order-c1983.firebaseapp.com",
+            databaseURL: "https://order-c1983-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "order-c1983",
+            storageBucket: "order-c1983.firebasestorage.app",
+            messagingSenderId: "1011114815070",
+            appId: "1:1011114815070:web:4442de5177128fe9ee0ecf"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        // Get sellerId from URL
+        function getSellerIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1] || segments[segments.length - 2];
+        }
+
+        const sellerId = getSellerIdFromUrl();
+
+        // Load seller information
+        async function loadSellerInfo() {
+            try {
+                // Cari seller berdasarkan sellerId
+                const sellerIdsRef = ref(db, 'sellerIds');
+                const queryRef = query(sellerIdsRef, orderByChild('sellerId'), equalTo(sellerId));
+                const snapshot = await get(queryRef);
+                
+                if (!snapshot.exists()) {
+                    document.getElementById('shopName').textContent = 'Toko Tidak Ditemukan';
+                    document.getElementById('shopDescription').textContent = 'URL toko tidak valid';
+                    return;
+                }
+                
+                let sellerUid = null;
+                snapshot.forEach((child) => {
+                    sellerUid = child.val().uid;
+                });
+                
+                // Load seller details
+                const sellerRef = ref(db, 'sellers/' + sellerUid);
+                const sellerSnap = await get(sellerRef);
+                
+                if (sellerSnap.exists()) {
+                    const seller = sellerSnap.val();
+                    
+                    document.getElementById('shopName').textContent = seller.shopName || seller.sellerId;
+                    document.getElementById('shopDescription').textContent = seller.shopDescription || 'Toko Online Profesional';
+                    
+                    document.getElementById('shopInfo').innerHTML = `
+                        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                                <i class="fas fa-store" style="font-size: 24px; color: white;"></i>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0;">${seller.shopName || seller.sellerId}</h3>
+                                <p style="margin: 5px 0 0 0; color: #666;">${seller.shopDescription || 'Selamat berbelanja!'}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading seller:', error);
+                document.getElementById('shopName').textContent = 'Error Loading Shop';
+            }
+        }
+
+        // Handle file upload
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File terlalu besar. Maksimal 5MB');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('filePreview').innerHTML = `
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 8px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center;">
+                            <i class="fas fa-file" style="font-size: 20px; color: #667eea; margin-right: 10px;"></i>
+                            <div>
+                                <div style="font-weight: 500;">${file.name}</div>
+                                <div style="font-size: 12px; color: #666;">${(file.size / 1024).toFixed(1)} KB</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('filePreview').innerHTML = ''; document.getElementById('fileUpload').value = '';" 
+                                style="background: none; border: none; color: #666; cursor: pointer;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Handle form submission
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerPhone = document.getElementById('customerPhone').value.trim();
+            const orderMessage = document.getElementById('orderMessage').value.trim();
+            const fileInput = document.getElementById('fileUpload');
+            
+            // Validasi
+            if (!customerName || !customerPhone || !orderMessage) {
+                alert('Harap isi semua kolom yang diperlukan');
+                return;
+            }
+            
+            if (customerPhone.length < 10) {
+                alert('Nomor WhatsApp tidak valid');
+                return;
+            }
+            
+            // Cari seller UID
+            const sellerIdsRef = ref(db, 'sellerIds');
+            const queryRef = query(sellerIdsRef, orderByChild('sellerId'), equalTo(sellerId));
+            const snapshot = await get(queryRef);
+            
+            if (!snapshot.exists()) {
+                alert('Toko tidak ditemukan');
+                return;
+            }
+            
+            let sellerUid = null;
+            snapshot.forEach((child) => {
+                sellerUid = child.val().uid;
+            });
+            
+            try {
+                // Upload file jika ada
+                let fileUrl = null;
+                if (fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const fileName = `${Date.now()}_${file.name}`;
+                    const storagePath = `orders/${sellerUid}/${fileName}`;
+                    const fileRef = storageRef(storage, storagePath);
+                    
+                    await uploadBytes(fileRef, file);
+                    fileUrl = await getDownloadURL(fileRef);
+                }
+                
+                // Buat order ID
+                const orderId = 'order_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                // Simpan order
+                const orderData = {
+                    id: orderId,
+                    customerName: customerName,
+                    customerPhone: customerPhone,
+                    orderMessage: orderMessage,
+                    fileUrl: fileUrl,
+                    status: 'pending',
+                    sellerId: sellerId,
+                    sellerUid: sellerUid,
+                    timestamp: new Date().toISOString(),
+                    createdAt: new Date().toISOString()
+                };
+                
+                await set(ref(db, 'orders/' + orderId), orderData);
+                
+                // Update seller stats
+                const sellerRef = ref(db, 'sellers/' + sellerUid + '/stats/totalOrders');
+                const currentStats = await get(sellerRef);
+                const newTotal = (currentStats.val() || 0) + 1;
+                await set(sellerRef, newTotal);
+                
+                // Kirim notifikasi Telegram (jika diatur)
+                await sendTelegramNotification(sellerUid, orderData);
+                
+                // Reset form
+                document.getElementById('orderForm').reset();
+                document.getElementById('filePreview').innerHTML = '';
+                
+                alert('✅ Pesanan berhasil dikirim! Seller akan menghubungi Anda segera.');
+                
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                alert('❌ Gagal mengirim pesanan. Silakan coba lagi.');
+            }
+        });
+
+        async function sendTelegramNotification(sellerUid, orderData) {
+            try {
+                const sellerRef = ref(db, 'sellers/' + sellerUid + '/settings');
+                const snapshot = await get(sellerRef);
+                
+                if (snapshot.exists()) {
+                    const settings = snapshot.val();
+                    const botToken = settings.telegramBotToken;
+                    const chatId = settings.telegramChatId;
+                    
+                    if (botToken && chatId) {
+                        const message = `🛒 *ORDER BARU!*
+                        
+Nama: ${orderData.customerName}
+WhatsApp: ${orderData.customerPhone}
+Pesan: ${orderData.orderMessage.substring(0, 200)}...
+Waktu: ${new Date().toLocaleString('id-ID')}
+                        
+URL Dashboard: https://minzxit.com/dashboard`;
+                        
+                        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: chatId,
+                                text: message,
+                                parse_mode: 'Markdown'
+                            })
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Telegram notification error:', error);
+            }
+        }
+
+        // Initialize
+        loadSellerInfo();
+    </script>
+</body>
+</html>
